@@ -11,5 +11,11 @@ export type ActivityLog = {
   type: "info" | "success" | "error";
 };
 
-export type OperationType = "insert" | "delete";
+export type Flashcard = {
+  title: string;
+  description: string;
+  complexity: string;
+};
+
+export type OperationType = "insert" | "delete" | "traverse";
 export type OperationPosition = "start" | "end" | "index";

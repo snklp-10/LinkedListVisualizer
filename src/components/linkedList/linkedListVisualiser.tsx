@@ -3,35 +3,75 @@ import { LinkedList } from "@/lib/linkedList";
 import React, { useRef, useState } from "react";
 import LinkedListDisplay from "./linkedlistDisplay";
 import LinkedListCtrls from "./linkedListCtrls";
-import { ActivityLog, OperationPosition, OperationType } from "@/lib/types";
+import {
+  ActivityLog,
+  Flashcard,
+  OperationPosition,
+  OperationType,
+} from "@/lib/types";
 import LinkedListLog from "./linkedlistLog";
 import LinkedListCode from "./linkedlistCode";
+import { getFlashcard } from "@/lib/flashcards";
 
 const LinkedListVisualizer = () => {
   const listRef = useRef(new LinkedList());
 
   const [nodes, setNodes] = useState(listRef.current.getNodes());
   const [logs, setLogs] = useState<ActivityLog[]>([]);
+  const [isTraversing, setIsTraversing] = useState(false);
+  const [currentIndex, setCurrentIndex] = useState<number | null>(null);
+  const [removingId, setRemovingId] = useState<string | null>(null);
 
-  //   const handleInsert = (value: number) => {
-  //     listRef.current.insertAtEnd(value);
+  const [flashcard, setFlashcard] = useState<Flashcard>({
+    title: "Linked List ready",
+    description: "Select an operation to begin",
+    complexity: "None",
+  });
 
-  //     setNodes([...listRef.current.getNodes()]);
+  const startTraversal = () => {
+    if (nodes.length === 0) {
+      addLog("Cannot traverse: List is empty", "error");
+      return;
+    }
+    setFlashcard(getFlashcard("traverse", "start"));
+    setIsTraversing(true);
+    setCurrentIndex(0);
 
-  //     addLog(`Inserted node ${value} at the end`, "success");
-  //   };
+    addLog("Traversal started at Head", "info");
+  };
 
-  //   const handleDelete = () => {
-  //     const removed = listRef.current.deleteAtEnd();
+  const nextTraversalStep = () => {
+    if (currentIndex === null) return;
 
-  //     if (!removed) {
-  //       addLog("Cannot delete: List is empty", "error");
-  //       return;
-  //     }
+    if (currentIndex === nodes.length - 1) {
+      addLog("Traversal complete: Reached NULL", "success");
 
-  //     setNodes([...listRef.current.getNodes()]);
-  //     addLog(`Deleted node ${removed.value} from the end`, "success");
-  //   };
+      setFlashcard({
+        title: "Traversal Complete",
+        description:
+          "The pointer has reached NULL. All nodes have been visited.",
+        complexity: "Visited all nodes: O(n)",
+      });
+
+      setIsTraversing(false);
+      setCurrentIndex(null);
+      return;
+    }
+
+    const nextIndex = currentIndex + 1;
+    setCurrentIndex(nextIndex);
+
+    addLog(
+      `Pointer moved to node with value ${nodes[nextIndex].value}`,
+      "info",
+    );
+  };
+
+  const resetTraversal = () => {
+    setIsTraversing(false);
+    setCurrentIndex(null);
+    addLog("Traversal reset", "info");
+  };
 
   const handlePerform = (
     operation: OperationType,
@@ -39,9 +79,15 @@ const LinkedListVisualizer = () => {
     value?: number,
     index?: number,
   ) => {
+    // ✅ Flashcard updates immediately
+    setFlashcard(getFlashcard(operation, position));
+
+    setIsTraversing(false);
+    setCurrentIndex(null);
+
     if (operation === "insert") {
-      if (value === undefined) {
-        addLog("Insert requires a value", "error");
+      if (value === undefined || isNaN(value)) {
+        addLog("Insert requires a valid value", "error");
         return;
       }
 
@@ -49,19 +95,74 @@ const LinkedListVisualizer = () => {
         listRef.current.insertAtEnd(value);
         addLog(`Inserted ${value} at end`, "success");
       }
+
+      if (position === "start") {
+        listRef.current.insertAtStart(value);
+        addLog(`Inserted ${value} at start`, "success");
+      }
+
+      if (position === "index") {
+        if (index === undefined || isNaN(index)) {
+          addLog("Insert at index requires a valid index", "error");
+          return;
+        }
+
+        try {
+          listRef.current.insertAtIndex(value, index);
+          addLog(`Inserted ${value} at index ${index}`, "success");
+        } catch {
+          addLog("Index out of bounds", "error");
+          return;
+        }
+      }
     }
 
     if (operation === "delete") {
       if (position === "end") {
         const removed = listRef.current.deleteAtEnd();
+
         if (!removed) {
           addLog("Cannot delete: List empty", "error");
           return;
         }
+
         addLog(`Deleted ${removed.value} from end`, "success");
+      }
+
+      if (position === "start") {
+        const removed = listRef.current.deleteAtStart();
+
+        if (!removed) {
+          addLog("Cannot delete: List empty", "error");
+          return;
+        }
+
+        addLog(`Deleted ${removed.value} from start`, "success");
+      }
+
+      if (position === "index") {
+        if (index === undefined || isNaN(index)) {
+          addLog("Delete at index requires a valid index", "error");
+          return;
+        }
+
+        try {
+          const removed = listRef.current.deleteAtIndex(index);
+
+          if (!removed) {
+            addLog("Cannot delete: List empty", "error");
+            return;
+          }
+
+          addLog(`Deleted ${removed.value} at index ${index}`, "success");
+        } catch {
+          addLog("Index out of bounds", "error");
+          return;
+        }
       }
     }
 
+    // ✅ Update UI snapshot
     setNodes([...listRef.current.getNodes()]);
   };
 
@@ -80,11 +181,11 @@ const LinkedListVisualizer = () => {
   };
 
   return (
-    <div className="flex flex-col w-full max-w-5xl space-y-6 text-center">
+    <div className="flex flex-col w-full max-w-9xl space-y-6 text-center">
       <h1 className="text-3xl font-bold">Linked List Visualizer</h1>
 
       <div className="border rounded-3xl p-6 space-y-6 shadow-sm">
-        <LinkedListDisplay nodes={nodes} />
+        <LinkedListDisplay nodes={nodes} currentIndex={currentIndex} />
 
         <div className="grid grid-cols-2 gap-6">
           <div className="space-y-4">
@@ -95,9 +196,14 @@ const LinkedListVisualizer = () => {
 
             {/* Flashcards Placeholder */}
             <div className="border rounded-2xl p-4 h-35">
-              <h2 className="font-bold text-lg mb-2">Flashcards</h2>
-              <p className="text-sm text-gray-500">
-                Operation explanation will appear here.
+              <p className="font-semibold text-blue-600">{flashcard.title}</p>
+
+              <p className="text-sm text-gray-600 mt-1">
+                {flashcard.description}
+              </p>
+
+              <p className="text-sm font-medium text-green-700 mt-2">
+                {flashcard.complexity}
               </p>
             </div>
           </div>
@@ -118,7 +224,12 @@ const LinkedListVisualizer = () => {
           </div>
         </div>
 
-        <LinkedListCtrls onPerform={handlePerform} />
+        <LinkedListCtrls
+          onPerform={handlePerform}
+          onTraverseNext={nextTraversalStep}
+          onTraverseStart={startTraversal}
+          isTraversing={isTraversing}
+        />
       </div>
     </div>
   );

@@ -9,9 +9,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../ui/select";
+import { ArrowRight } from "lucide-react";
 
 const LinkedListCtrls = ({
   onPerform,
+  onTraverseStart,
+  onTraverseNext,
+  isTraversing,
 }: {
   onPerform: (
     operation: "insert" | "delete",
@@ -19,6 +23,9 @@ const LinkedListCtrls = ({
     value?: number,
     index?: number,
   ) => void;
+  onTraverseStart: () => void;
+  onTraverseNext: () => void;
+  isTraversing: boolean;
 }) => {
   const [operation, setOperation] = useState<"insert" | "delete">("insert");
   const [position, setPosition] = useState<"start" | "end" | "index">("end");
@@ -30,7 +37,7 @@ const LinkedListCtrls = ({
   const needsIndex = position === "index";
 
   return (
-    <div className="flex gap-4 items-center justify-center flex-wrap">
+    <div className="flex w-full gap-2 items-center justify-center flex-wrap">
       {/* ✅ Operation Select */}
       <Select
         value={operation}
@@ -76,6 +83,21 @@ const LinkedListCtrls = ({
         onChange={(e) => setIndex(e.target.value)}
         className="w-35 disabled:opacity-40"
       />
+
+      <Button
+        variant="secondary"
+        onClick={onTraverseStart}
+        disabled={isTraversing}
+      >
+        Traverse
+      </Button>
+      <Button
+        variant="secondary"
+        onClick={onTraverseNext}
+        className="flex items-center justify-center"
+      >
+        Next Step <ArrowRight />
+      </Button>
 
       {/* ✅ Perform Button */}
       <Button

@@ -18,7 +18,7 @@ const LinkedListLog = ({ logs }: { logs: ActivityLog[] }) => {
                   ? "bg-green-200"
                   : log.type === "error"
                     ? "bg-red-300"
-                    : "bg-gray-400"
+                    : "bg-gray-200"
               }`}
             >
               {log.message}
