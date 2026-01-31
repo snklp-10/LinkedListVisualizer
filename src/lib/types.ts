@@ -17,5 +17,27 @@ export type Flashcard = {
   complexity: string;
 };
 
+export type QuizTopic =
+  | "insert-start"
+  | "insert-end"
+  | "insert-index"
+  | "delete-start"
+  | "delete-end"
+  | "delete-index"
+  | "traverse";
+
+export type QuizQuestion = {
+  id: string;
+  topic: QuizTopic;
+  difficulty: "easy" | "medium" | "hard";
+
+  question: string;
+  options: string[];
+  correctIndex: number;
+
+  hints: string[];
+  explanation: string;
+};
+
 export type OperationType = "insert" | "delete" | "traverse";
 export type OperationPosition = "start" | "end" | "index";

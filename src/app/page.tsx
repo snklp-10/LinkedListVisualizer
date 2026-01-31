@@ -1,5 +1,6 @@
 import LinkedListVisualizer from "@/components/linkedList/linkedListVisualiser";
 import MaxWidthWrapper from "@/components/MaxWidthWrapper";
+import Image from "next/image";
 import React from "react";
 
 const LinkedListPage = () => {
